@@ -1,13 +1,20 @@
 const httpStatus = require('http-status');
 const APIError = require('../utils/APIError');
+const Pagination = require('../utils/Pagination');
 const Post = require('../models/post.model');
 const { postSerializer, postCollectionSerializer } = require('../serializers/post.serializer');
 
 // Get list posts
 exports.listPost = async (req, res, next) => {
   try {
-    const posts = await Post.find();
-    res.json({ list: postCollectionSerializer(posts) });
+    const pagi = new Pagination(req.query);
+
+    const [posts, total] = await Promise.all([
+
+      Post.find().skip(pagi.skipCount).limit(pagi.pageSize),
+      Post.count(),
+    ]);
+    res.json(pagi.paginate(postCollectionSerializer(posts), total));
   } catch (error) {
     next(error);
   }
@@ -21,7 +28,7 @@ exports.showPost = async (req, res, next) => {
     if (!post) {
       throw new APIError({
         status: httpStatus.NOT_FOUND,
-        message: 'Post not found',
+        message: 'Resource not found',
       });
     }
     res.json({ item: postSerializer(post) });
@@ -49,7 +56,7 @@ exports.updatePost = async (req, res, next) => {
     if (!post) {
       throw new APIError({
         status: httpStatus.NOT_FOUND,
-        message: 'Post not found',
+        message: 'Resource not found',
       });
     }
     res.json({ item: postSerializer(post) });
@@ -59,13 +66,13 @@ exports.updatePost = async (req, res, next) => {
 };
 
 // Delete post by ID
-exports.removePost = async (req, res, next) => {
+exports.deletePost = async (req, res, next) => {
   try {
     const post = await Post.findByIdAndRemove(req.params.id);
     if (!post) {
       throw new APIError({
         status: httpStatus.NOT_FOUND,
-        message: 'Post not found',
+        message: 'Resource not found',
       });
     }
     res.json({

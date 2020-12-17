@@ -28,6 +28,6 @@ router.route('/:id')
 
 // DELETE /api/post/:id
 router.route('/:id')
-  .delete(validate(deletePostValidation, { keyByField: true }), postController.removePost);
+  .delete(validate(deletePostValidation, { keyByField: true }), postController.deletePost);
 
 module.exports = router;
